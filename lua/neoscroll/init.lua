@@ -1,3 +1,4 @@
+local config = require('neoscroll.config')
 local opts = require('neoscroll.config').options
 local scroll_timer = vim.loop.new_timer()
 local target_line = 0
@@ -211,18 +212,21 @@ local function stop_scrolling(move_cursor)
 end
 
 
-local function compute_time_step(lines_to_scroll, lines, time, easing)
+local function compute_time_step(lines_to_scroll, lines, time, easing_function)
     local lines_to_scroll_abs = math.abs(lines_to_scroll)
     local lines_range = math.abs(lines)
+    local ef = config.easing_functions[easing_function]
     local time_step
     -- If not yet in range return average time-step
-    if lines_to_scroll_abs >= lines_range or easing == nil then
+    if not ef then
         time_step = math.floor(time/(lines_range-1) + 0.5)
+    elseif lines_to_scroll_abs >= lines_range then
+        -- print(lines_to_scroll_abs)
+        time_step = math.floor(time*ef(1/lines_range) + 0.5)
     else
         local x1 = (lines_range - lines_to_scroll_abs) / lines_range
         local x2 = (lines_range - lines_to_scroll_abs + 1) / lines_range
-        time_step = math.floor(time*(easing(x2) - easing(x1)) + 0.5)
-        print(time_step)
+        time_step = math.floor(time*(ef(x2) - ef(x1)) + 0.5)
     end
     if time_step == 0 then time_step = 1 end
     return time_step
@@ -238,18 +242,16 @@ local neoscroll = {}
 -- time_step1: initial time-step between two single-line scrolls
 -- time_step2: last time-step between two single-line scrolls
 -- easing: easing function used to ease the scrolling animation
-function neoscroll.scroll(lines, move_cursor, time, easing)
+function neoscroll.scroll(lines, move_cursor, time, easing_function)
     -- If lines is a fraction of the window transform it to lines
     if is_float(lines) then
         lines = get_lines_from_win_fraction(lines)
     end
-    local lines_to_scroll = current_line - target_line
-
     -- If still scrolling just modify the amount of lines to scroll
     -- If the scroll is in the opposite direction and
     -- lines_to_scroll is longer than lines stop smoothly
     if scrolling then
-        lines_to_scroll = current_line - target_line
+        local lines_to_scroll = current_line - target_line
         local opposite_direction = lines_to_scroll * lines > 0
         local long_scroll = math.abs(lines_to_scroll) - math.abs(lines) > 0
         if opposite_direction and long_scroll then
@@ -265,39 +267,47 @@ function neoscroll.scroll(lines, move_cursor, time, easing)
     if not scroll_window and not scroll_cursor then return end
     -- Preparation before scrolling starts
     before_scrolling(lines, move_cursor)
+    -- If easing function is not specified default to easing_function
+    local ef = easing_function and easing_function or opts.easing_function
+
+    local lines_to_scroll = current_line - target_line
+    local time_step = compute_time_step(lines_to_scroll, lines, time, ef)
+    local next_lines_to_scroll = math.abs(lines_to_scroll) - 1
+    local next_time_step = compute_time_step(
+        next_lines_to_scroll, lines, time, ef)
+    local next_next_time_step = compute_time_step(
+        next_lines_to_scroll-1, lines, time, ef)
+    -- Scroll the first line
+    scroll_one_line(lines, scroll_window, scroll_cursor)
 
     -- Callback function triggered by scroll_timer
     local function scroll_callback()
         lines_to_scroll = target_line - current_line
-        if lines_to_scroll == 0 then
-            stop_scrolling(move_cursor)
-            return
-        end
-
         scroll_window, scroll_cursor = who_scrolls(lines_to_scroll, move_cursor)
         if not scroll_window and not scroll_cursor then
             stop_scrolling(move_cursor)
             return
         end
 
-        if opts.easing then
-            local ef = easing and easing or opts.easing_function
-            local timer_repeat = compute_time_step(
-                lines_to_scroll, lines, time, ef)
-            -- print(timer_repeat)
-            scroll_timer:set_repeat(timer_repeat)
+        if math.abs(lines_to_scroll) > 2 and ef then
+            next_lines_to_scroll = math.abs(lines_to_scroll) - 2
+            next_time_step = compute_time_step(
+                next_lines_to_scroll, lines, time, ef)
+            -- sets the repeat of the next cycle
+            scroll_timer:set_repeat(next_time_step)
         end
         scroll_one_line(lines_to_scroll, scroll_window, scroll_cursor)
-        -- print(current_line .. '/' .. target_line)
+        if math.abs(lines_to_scroll) == 1 then
+            stop_scrolling(move_cursor)
+            return
+        end
+
     end
 
-    local time_step = compute_time_step(lines_to_scroll, lines, time, easing)
-    -- print(time_step)
-
-    -- Scroll the first line
-    scroll_one_line(lines, scroll_window, scroll_cursor)
     -- Start timer to scroll the rest of the lines
-    scroll_timer:start(time_step, time_step, vim.schedule_wrap(scroll_callback))
+    scroll_timer:start(time_step, next_time_step,
+        vim.schedule_wrap(scroll_callback))
+    scroll_timer:set_repeat(next_next_time_step)
 end
 
 

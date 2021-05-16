@@ -8,7 +8,7 @@ config.options = {
     respect_scrolloff = false,
     cursor_scrolls_alone = true,
     easing = false,
-    easing_function = function(x) return math.pow(x, 2) end
+    easing_function = "sine"
 }
 
 -- Default options
@@ -22,15 +22,25 @@ function config.set_options(opts)
 end
 
 
+config.easing_functions = {
+    quadratic = function(x) return 1 - math.pow(1-x, 1/2)     end,
+    cubic     = function(x) return 1 - math.pow(1-x, 1/3)     end,
+    quartic   = function(x) return 1 - math.pow(1-x, 1/4)     end,
+    quintic   = function(x) return 1 - math.pow(1-x, 1/5)     end,
+    circular  = function(x) return 1 - math.pow(1-x*x, 1/2)   end,
+    sine      = function(x) return 2 * math.asin(x) / math.pi end
+}
+
+
 config.key_to_function = {}
 
 local function generate_default_mappings(custom_mappings)
     custom_mappings = custom_mappings and custom_mappings or {}
     local defaults = {}
-    defaults['<C-u>'] = {'scroll', {'-vim.wo.scroll'                 , 'true' , '250' }}
-    defaults['<C-d>'] = {'scroll', { 'vim.wo.scroll'                 , 'true' , '250' }}
-    defaults['<C-b>'] = {'scroll', {'-vim.api.nvim_win_get_height(0)', 'true' , '350' }}
-    defaults['<C-f>'] = {'scroll', { 'vim.api.nvim_win_get_height(0)', 'true' , '350' }}
+    defaults['<C-u>'] = {'scroll', {'-vim.wo.scroll'                 , 'true' , '350'}}
+    defaults['<C-d>'] = {'scroll', { 'vim.wo.scroll'                 , 'true' , '350'}}
+    defaults['<C-b>'] = {'scroll', {'-vim.api.nvim_win_get_height(0)', 'true' , '550' }}
+    defaults['<C-f>'] = {'scroll', { 'vim.api.nvim_win_get_height(0)', 'true' , '550' }}
     defaults['<C-y>'] = {'scroll', {'-0.10'                          , 'false', '100' }}
     defaults['<C-e>'] = {'scroll', { '0.10'                          , 'false', '100' }}
     defaults['zt']    = {'zt'    , {                                            '200' }}

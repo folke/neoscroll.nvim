@@ -106,9 +106,7 @@ OPTIONS                                                       *neoscroll-options
 |mappings| (default: `{'<C-u>', '<C-d>', '<C-b>', '<C-f>',`
                     `'<C-y>', '<C-e>', 'zt', 'zz', 'zb'}`)
     All the keys defined in this option will be mapped to their corresponding
-    smooth-scroll function as defined in the
-    `require('neoscroll.config').key_to_function` table. To no map any key
-    pass an empty table (`{}`)
+    default scrolling animation. To no map any key pass an empty table (`{}`).
 
 |hide_cursor| (default: `true`)
     If 'termguicolors' is set hide the cursor while scrolling.
@@ -125,11 +123,11 @@ OPTIONS                                                       *neoscroll-options
     The cursor will keep on scrolling even if the window cannot scroll
     further.
 
-|easing_function| (default: `quadratic`)
+|easing_function| (default: `nil`)
     Name of the easing function to use by default in all scrolling animamtions.
     `scroll()` that don't provide the optional `easing` argument will use this
-    easing function. Set the value to `nil` to not use easing in the scrolling
-    animation (constant scrolling speed).
+    easing function. If set to `nil` (the default) no easing function will be
+    used in the scrolling animation (constant scrolling speed).
 
 ===============================================================================
 DEFAULT MAPPINGS                                     *neoscroll-default-mappings*

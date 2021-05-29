@@ -7,8 +7,7 @@ config.options = {
     stop_eof = true,
     respect_scrolloff = false,
     cursor_scrolls_alone = true,
-    easing = false,
-    easing_function = "sine"
+    easing_function = nil
 }
 
 -- Default options
@@ -37,15 +36,15 @@ config.key_to_function = {}
 local function generate_default_mappings(custom_mappings)
     custom_mappings = custom_mappings and custom_mappings or {}
     local defaults = {}
-    defaults['<C-u>'] = {'scroll', {'-vim.wo.scroll'                 , 'true' , '350'}}
-    defaults['<C-d>'] = {'scroll', { 'vim.wo.scroll'                 , 'true' , '350'}}
-    defaults['<C-b>'] = {'scroll', {'-vim.api.nvim_win_get_height(0)', 'true' , '550' }}
-    defaults['<C-f>'] = {'scroll', { 'vim.api.nvim_win_get_height(0)', 'true' , '550' }}
+    defaults['<C-u>'] = {'scroll', {'-vim.wo.scroll'                 , 'true' , '250'}}
+    defaults['<C-d>'] = {'scroll', { 'vim.wo.scroll'                 , 'true' , '250'}}
+    defaults['<C-b>'] = {'scroll', {'-vim.api.nvim_win_get_height(0)', 'true' , '450' }}
+    defaults['<C-f>'] = {'scroll', { 'vim.api.nvim_win_get_height(0)', 'true' , '450' }}
     defaults['<C-y>'] = {'scroll', {'-0.10'                          , 'false', '100' }}
     defaults['<C-e>'] = {'scroll', { '0.10'                          , 'false', '100' }}
-    defaults['zt']    = {'zt'    , {                                            '200' }}
-    defaults['zz']    = {'zz'    , {                                            '200' }}
-    defaults['zb']    = {'zb'    , {                                            '200' }}
+    defaults['zt']    = {'zt'    , {                                            '250' }}
+    defaults['zz']    = {'zz'    , {                                            '250' }}
+    defaults['zb']    = {'zb'    , {                                            '250' }}
 
     local t = {}
     local keys = config.options.mappings
